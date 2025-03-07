@@ -24,7 +24,7 @@ class Transactions {
                 'unique_amount' => $unique_amount,
                 'status' => 'pending',
                 'created_at' => current_time('mysql'),
-                'expires_at' => date('Y-m-d H:i:s', strtotime('+24 hours')),
+                'expires_at' => isset($data['expires_at']) ? $data['expires_at'] : date('Y-m-d H:i:s', strtotime('+10 minutes')),
             ),
             array('%d', '%f', '%f', '%s', '%s', '%s')
         );

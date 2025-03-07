@@ -56,9 +56,13 @@ class PaymentGateway extends \WC_Payment_Gateway {
         $transaction = new Transactions();
         
         try {
+            // تنظیم زمان انقضا به 10 دقیقه بعد
+            $expires_at = date('Y-m-d H:i:s', strtotime('+10 minutes'));
+            
             $transaction_id = $transaction->create(array(
                 'order_id' => $order_id,
-                'amount' => $order->get_total()
+                'amount' => $order->get_total(),
+                'expires_at' => $expires_at
             ));
             
             if (!$transaction_id) {

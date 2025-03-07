@@ -5,12 +5,13 @@
         constructor(element) {
             this.element = element;
             this.expiresAt = new Date(element.dataset.expires).getTime();
-            this.totalSeconds = parseInt(element.dataset.totalSeconds, 10);
+            this.totalTime = parseInt(element.dataset.totalTime, 10); // 10 دقیقه به ثانیه
+            this.remainingTime = parseInt(element.dataset.remainingTime, 10);
             this.labelElement = element.querySelector('.cpg-timer-label');
             this.pathElement = element.querySelector('.cpg-timer-path-remaining');
             
             this.FULL_DASH_ARRAY = 283; // 2 * π * 45
-            this.WARNING_THRESHOLD = 300; // 5 دقیقه
+            this.WARNING_THRESHOLD = 180; // 3 دقیقه
             this.ALERT_THRESHOLD = 60; // 1 دقیقه
             
             // تنظیم stroke-dasharray اولیه
@@ -31,10 +32,7 @@
         }
         
         updateTimer() {
-            const now = new Date().getTime();
-            const timeLeft = Math.round((this.expiresAt - now) / 1000);
-            
-            if (timeLeft <= 0) {
+            if (this.remainingTime <= 0) {
                 clearInterval(this.timer);
                 this.labelElement.textContent = '00:00';
                 this.pathElement.style.strokeDashoffset = this.FULL_DASH_ARRAY;
@@ -43,22 +41,24 @@
                 return;
             }
             
-            // محاسبه دقیق دقیقه و ثانیه
-            const minutes = Math.floor(timeLeft / 60);
-            const seconds = timeLeft % 60;
+            // محاسبه دقیقه و ثانیه
+            const minutes = Math.floor(this.remainingTime / 60);
+            const seconds = this.remainingTime % 60;
             this.labelElement.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
             
             // محاسبه stroke-dashoffset
-            const fraction = timeLeft / this.totalSeconds;
+            const fraction = this.remainingTime / this.totalTime;
             const dashoffset = this.FULL_DASH_ARRAY * (1 - fraction);
             this.pathElement.style.strokeDashoffset = dashoffset;
             
             // تغییر رنگ بر اساس زمان باقی‌مانده
-            if (timeLeft <= this.ALERT_THRESHOLD) {
+            if (this.remainingTime <= this.ALERT_THRESHOLD) {
                 this.pathElement.style.stroke = '#f44336';
-            } else if (timeLeft <= this.WARNING_THRESHOLD) {
+            } else if (this.remainingTime <= this.WARNING_THRESHOLD) {
                 this.pathElement.style.stroke = '#ff9800';
             }
+            
+            this.remainingTime--;
         }
     }
     
