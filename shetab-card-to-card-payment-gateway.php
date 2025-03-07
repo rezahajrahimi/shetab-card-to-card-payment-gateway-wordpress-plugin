@@ -255,6 +255,93 @@ function cpg_settings_page() {
     <?php
 }
 
+// ثبت درگاه پرداخت جدید
+add_action('woocommerce_blocks_loaded', 'cpg_init_payment_gateway');
+function cpg_init_payment_gateway() {
+    if (!class_exists('Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType')) {
+        return;
+    }
+
+    // ثبت درگاه پرداخت برای بلوک‌های ووکامرس
+    add_action('woocommerce_payment_gateways', 'cpg_add_gateway_class');
+    
+    class WC_Shetab_Card_To_Card_Payment_Gateway extends WC_Payment_Gateway {
+        public function __construct() {
+            $this->id = 'shetab_card_to_card';
+            $this->icon = plugin_dir_url(__FILE__) . 'logo.jpeg'; 
+            $this->has_fields = false;
+            $this->method_title = 'درگاه پرداخت کارت به کارت';
+            $this->method_description = 'پرداخت از طریق کارت به کارت با تایید خودکار';
+            
+            $this->supports = array(
+                'products',
+                'refunds',
+                'pre-orders',
+                'payment_form'
+            );
+            
+            $this->init_form_fields();
+            $this->init_settings();
+            
+            $this->title = $this->get_option('title');
+            $this->description = $this->get_option('description');
+            $this->enabled = $this->get_option('enabled');
+            
+            add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
+        }
+    }
+}
+
+// ثبت درگاه پرداخت برای بلوک‌های ووکامرس
+class WC_Shetab_Gateway_Blocks_Support extends Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType {
+    private $gateway;
+    
+    public function __construct() {
+        $this->gateway = new WC_Shetab_Card_To_Card_Payment_Gateway();
+    }
+    
+    public function initialize() {
+        $this->settings = get_option('woocommerce_shetab_card_to_card_settings', array());
+    }
+    
+    public function is_active() {
+        return $this->gateway->is_available();
+    }
+    
+    public function get_payment_method_script_handles() {
+        wp_register_script(
+            'shetab-blocks-integration',
+            plugins_url('js/blocks-integration.js', __FILE__),
+            array('wc-blocks-registry', 'wc-settings', 'wp-element', 'wp-html-entities', 'wp-i18n'),
+            null,
+            true
+        );
+        return array('shetab-blocks-integration');
+    }
+    
+    public function get_payment_method_data() {
+        return array(
+            'title' => $this->gateway->title,
+            'description' => $this->gateway->description,
+            'supports' => $this->gateway->supports,
+        );
+    }
+}
+
+// ثبت اسکریپت‌های مورد نیاز
+add_action('init', function() {
+    if (!class_exists('Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry')) {
+        return;
+    }
+    
+    add_action(
+        'woocommerce_blocks_payment_method_type_registration',
+        function(Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry $payment_method_registry) {
+            $payment_method_registry->register(new WC_Shetab_Gateway_Blocks_Support());
+        }
+    );
+});
+
 // اضافه کردن درگاه پرداخت به ووکامرس
 add_action('woocommerce_payment_gateways', 'cpg_add_gateway_class');
 function cpg_add_gateway_class($gateways) {
