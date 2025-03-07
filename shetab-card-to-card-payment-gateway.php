@@ -270,21 +270,19 @@ add_action('plugins_loaded', function() {
     
     class WC_Shetab_Card_To_Card_Payment_Gateway extends WC_Payment_Gateway {
         public function __construct() {
-            $this->id = 'shetab_card_to_card_payment_gateway';
-            $this->icon = CPG_PLUGIN_URL . 'logo.jpeg';
+            $this->id = 'shetab_card_to_card';
+            $this->method_title = 'درگاه پرداخت کارت به کارت';
+            $this->method_description = 'پرداخت از طریق کارت به کارت با تایید خودکار';
             $this->has_fields = false;
-            $this->method_title = 'پرداخت خودکار کارت به کارت';
-            $this->method_description = 'پرداخت از طریق واریز به شماره کارت';
+            $this->supports = array('products');
             
-            $this->supports = array(
-                'products'
-            );
-            
+            // تنظیمات پیش‌فرض
             $this->init_form_fields();
             $this->init_settings();
             
-            $this->title = $this->get_option('title');
-            $this->description = $this->get_option('description');
+            $this->title = $this->get_option('title', 'پرداخت کارت به کارت');
+            $this->description = $this->get_option('description', 'پرداخت مبلغ سفارش از طریق کارت به کارت');
+            $this->enabled = $this->get_option('enabled', 'yes');
             
             add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
         }
@@ -293,148 +291,58 @@ add_action('plugins_loaded', function() {
             $this->form_fields = array(
                 'enabled' => array(
                     'title'       => 'فعال/غیرفعال',
-                    'label'       => 'فعال کردن درگاه پرداخت',
                     'type'        => 'checkbox',
-                    'description' => '',
-                    'default'     => 'no'
+                    'label'       => 'فعال کردن درگاه پرداخت کارت به کارت',
+                    'default'     => 'yes'
                 ),
                 'title' => array(
                     'title'       => 'عنوان',
                     'type'        => 'text',
                     'description' => 'عنوانی که کاربر در صفحه پرداخت می‌بیند',
-                    'default'     => 'پرداخت دستی',
+                    'default'     => 'پرداخت کارت به کارت',
                     'desc_tip'    => true,
                 ),
                 'description' => array(
                     'title'       => 'توضیحات',
                     'type'        => 'textarea',
                     'description' => 'توضیحاتی که کاربر در صفحه پرداخت می‌بیند',
-                    'default'     => 'لطفا مبلغ سفارش را به شماره کارت زیر واریز کنید.',
-                    'desc_tip'    => true,
-                ),
+                    'default'     => 'پرداخت مبلغ سفارش از طریق کارت به کارت'
+                )
             );
         }
         
         public function process_payment($order_id) {
-            global $wpdb;
-            
-            $card_number = get_option('cpg_card_number');
-            $card_holder = get_option('cpg_card_holder');
-            $telegram_id = get_option('cpg_telegram_id');
-            $whatsapp_number = get_option('cpg_whatsapp_number');
-            
-            if (empty($card_number)) {
-                wc_add_notice('خطا: شماره کارت در تنظیمات درگاه پرداخت وارد نشده است.', 'error');
-                return array('result' => 'failure');
-            }
-            
+            global $woocommerce;
             $order = wc_get_order($order_id);
-            $amount = $order->get_total();
-            $unique_amount = $this->generate_unique_amount($amount);
-            $expires_at = date('Y-m-d H:i:s', strtotime('+10 minutes'));
+            
+            // Mark as pending (we're awaiting the payment)
+            $order->update_status('pending', __('در انتظار پرداخت کارت به کارت', 'woocommerce'));
+            
+            // ایجاد تراکنش در دیتابیس
+            global $wpdb;
+            $unique_amount = $order->get_total() + rand(1, 999) / 1000;
             
             $wpdb->insert(
                 $wpdb->prefix . 'cpg_transactions',
                 array(
                     'order_id' => $order_id,
-                    'amount' => $amount,
+                    'amount' => $order->get_total(),
                     'unique_amount' => $unique_amount,
                     'status' => 'pending',
                     'created_at' => current_time('mysql'),
-                    'expires_at' => $expires_at
+                    'expires_at' => date('Y-m-d H:i:s', strtotime('+24 hours')),
                 ),
                 array('%d', '%f', '%f', '%s', '%s', '%s')
             );
             
-            $transaction_id = $wpdb->insert_id;
-            cpg_add_log($transaction_id, 'تراکنش ایجاد شد');
+            // Empty cart
+            $woocommerce->cart->empty_cart();
             
-            $social_media_text = '';
-            if ($telegram_id || $whatsapp_number) {
-                $social_media_text = '<div class="cpg-social-media">';
-                $social_media_text .= '<p class="cpg-support-text">در صورت عدم تایید خودکار تراکنش، لطفاً تصویر رسید را از طریق یکی از راه‌های زیر ارسال نمایید:</p>';
-                
-                if ($telegram_id) {
-                    $social_media_text .= sprintf(
-                        '<a href="https://t.me/%s" target="_blank" class="cpg-social-button cpg-telegram">
-                            <img src="%sassets/images/telegram.png" alt="Telegram">
-                            <span>ارسال از طریق تلگرام</span>
-                        </a>',
-                        ltrim($telegram_id, '@'),
-                        CPG_PLUGIN_URL
-                    );
-                }
-                
-                if ($whatsapp_number) {
-                    $social_media_text .= sprintf(
-                        '<a href="https://wa.me/98%s" target="_blank" class="cpg-social-button cpg-whatsapp">
-                            <img src="%sassets/images/whatsapp.png" alt="WhatsApp">
-                            <span>ارسال از طریق واتساپ</span>
-                        </a>',
-                        $whatsapp_number,
-                        CPG_PLUGIN_URL
-                    );
-                }
-                
-                $social_media_text .= '</div>';
-            }
-            
-            // نمایش پیام به کاربر با تایمر
-            $message = sprintf(
-                '<div class="cpg-payment-info">
-                    <div class="cpg-timer-container">
-                        <div class="cpg-timer" data-expires="%s">
-                            <svg class="cpg-timer-circle">
-                                <circle class="cpg-timer-path-elapsed" cx="50" cy="50" r="45"></circle>
-                                <circle class="cpg-timer-path-remaining" cx="50" cy="50" r="45"></circle>
-                            </svg>
-                            <span class="cpg-timer-label">10:00</span>
-                        </div>
-                    </div>
-                    <div class="cpg-payment-details">
-                        <p>لطفا مبلغ <strong>%s تومان</strong> را به شماره کارت زیر واریز کنید:</p>
-                        <div class="cpg-card-info">
-                            <div class="cpg-card-number">%s</div>
-                            <div class="cpg-card-holder">به نام: %s</div>
-                        </div>
-                        <p class="cpg-amount-warning">
-                            <strong>توجه:</strong> مبلغ دقیقاً باید <strong>%s تومان</strong> باشد.
-                        </p>
-                        <p class="cpg-expires-text">مهلت پرداخت تا ساعت %s</p>
-                        %s
-                    </div>
-                </div>',
-                esc_attr($expires_at),
-                number_format($amount),
-                chunk_split($card_number, 4, '-'),
-                $card_holder,
-                number_format($unique_amount),
-                wp_date('H:i', strtotime($expires_at)),
-                $social_media_text
-            );
-            
-            wc_add_notice($message, 'notice');
-            
+            // Redirect to payment page
             return array(
                 'result' => 'success',
-                'redirect' => $this->get_return_url($order)
+                'redirect' => $order->get_checkout_payment_url(true)
             );
-        }
-        
-        private function generate_unique_amount($amount) {
-            global $wpdb;
-            
-            do {
-                $random = rand(100, 399);
-                $unique_amount = $amount + ($random / 1000);
-                
-                $exists = $wpdb->get_var($wpdb->prepare(
-                    "SELECT COUNT(*) FROM {$wpdb->prefix}cpg_transactions WHERE unique_amount = %f AND status = 'pending'",
-                    $unique_amount
-                ));
-            } while ($exists > 0);
-            
-            return $unique_amount;
         }
     }
 });
