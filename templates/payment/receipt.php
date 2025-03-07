@@ -74,7 +74,7 @@ wp_enqueue_script('cpg-payment-script');
         
         <div class="cpg-card-info">
             <div class="cpg-card-number" title="<?php _e('برای کپی کلیک کنید', 'shetab-card-to-card-payment-gateway'); ?>">
-                <?php echo chunk_split($card_number, 4, ' '); ?>
+                <?php echo chunk_split($card_number, 4, '-'); ?>
             </div>
             <div class="cpg-card-holder"><?php echo esc_html($card_holder); ?></div>
         </div>

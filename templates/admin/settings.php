@@ -52,6 +52,15 @@
     $endpoint_url = home_url('/wp-json/shetab-card-to-card-payment-gateway/v1/verify-payment');
     ?>
     
+    <div id="qrCodeModal" class="cpg-modal">
+        <div class="cpg-modal-content">
+            <span class="cpg-close">&times;</span>
+            <h2><?php _e('کد QR', 'shetab-card-to-card-payment-gateway'); ?></h2>
+            <div id="qrcode"></div>
+            <p class="qr-value"></p>
+        </div>
+    </div>
+
     <form method="post" action="">
         <?php wp_nonce_field('cpg_settings_nonce'); ?>
         <table class="form-table">
@@ -82,8 +91,8 @@
                 <th scope="row"><?php _e('شماره واتساپ', 'shetab-card-to-card-payment-gateway'); ?></th>
                 <td>
                     <input type="text" name="cpg_whatsapp_number" value="<?php echo esc_attr($whatsapp_number); ?>" 
-                           class="regular-text" placeholder="مثال: 09123456789">
-                    <p class="description"><?php _e('شماره واتساپ خود را بدون صفر اول وارد کنید', 'shetab-card-to-card-payment-gateway'); ?></p>
+                           class="regular-text" placeholder="مثال: 989123456789">
+                    <p class="description"><?php _e('شماره واتساپ خود را بدون صفر اول  و با 98 وارد کنید', 'shetab-card-to-card-payment-gateway'); ?></p>
                 </td>
             </tr>
             <tr>
@@ -94,6 +103,10 @@
                         <button type="button" class="button button-secondary copy-button" data-clipboard-target="#api_key_field">
                             <span class="dashicons dashicons-clipboard"></span>
                             <?php _e('کپی', 'shetab-card-to-card-payment-gateway'); ?>
+                        </button>
+                        <button type="button" class="button button-secondary qr-button" data-value="<?php echo esc_attr($api_key); ?>">
+                            <span class="dashicons dashicons-qr"></span>
+                            <?php _e('نمایش QR', 'shetab-card-to-card-payment-gateway'); ?>
                         </button>
                     </div>
                     <input type="submit" name="cpg_refresh_api_key" class="button button-secondary" 
@@ -110,6 +123,10 @@
                         <button type="button" class="button button-secondary copy-button" data-clipboard-target="#api_url_field">
                             <span class="dashicons dashicons-clipboard"></span>
                             <?php _e('کپی', 'shetab-card-to-card-payment-gateway'); ?>
+                        </button>
+                        <button type="button" class="button button-secondary qr-button" data-value="<?php echo esc_url($endpoint_url); ?>">
+                            <span class="dashicons dashicons-qr"></span>
+                            <?php _e('نمایش QR', 'shetab-card-to-card-payment-gateway'); ?>
                         </button>
                     </div>
                     <p class="description">
