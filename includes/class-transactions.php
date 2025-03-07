@@ -14,19 +14,24 @@ class Transactions {
     public function create($data) {
         global $wpdb;
         
-        $unique_amount = $data['amount'] + rand(1, 999) / 1000;
+        // تبدیل مبلغ به عدد صحیح
+        $amount = intval($data['amount']);
+        
+        // اضافه کردن عدد تصادفی بین 100 تا 399 تومان
+        $random_amount = rand(100, 399);
+        $unique_amount = $amount + $random_amount;
         
         $result = $wpdb->insert(
             $this->table,
             array(
                 'order_id' => $data['order_id'],
-                'amount' => $data['amount'],
+                'amount' => $amount,
                 'unique_amount' => $unique_amount,
                 'status' => 'pending',
                 'created_at' => current_time('mysql'),
                 'expires_at' => isset($data['expires_at']) ? $data['expires_at'] : date('Y-m-d H:i:s', strtotime('+10 minutes')),
             ),
-            array('%d', '%f', '%f', '%s', '%s', '%s')
+            array('%d', '%d', '%d', '%s', '%s', '%s')
         );
         
         return $result ? $wpdb->insert_id : false;

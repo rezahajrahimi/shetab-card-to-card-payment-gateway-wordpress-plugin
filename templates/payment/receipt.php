@@ -65,6 +65,11 @@ wp_enqueue_script('cpg-payment-script');
     <div class="cpg-payment-details">
         <h3><?php _e('اطلاعات پرداخت کارت به کارت', 'shetab-card-to-card-payment-gateway'); ?></h3>
         
+        <div class="cpg-amount">
+            <span class="cpg-label"><?php _e('مبلغ قابل پرداخت:', 'shetab-card-to-card-payment-gateway'); ?></span>
+            <span class="cpg-value"><?php echo number_format($transaction->unique_amount, 0, '', ','); ?> <?php _e('تومان', 'shetab-card-to-card-payment-gateway'); ?></span>
+        </div>
+        
         <p class="cpg-amount-text">
             <?php printf(
                 __('لطفاً مبلغ دقیق %s را به شماره کارت زیر واریز نمایید:', 'shetab-card-to-card-payment-gateway'),
@@ -74,7 +79,7 @@ wp_enqueue_script('cpg-payment-script');
         
         <div class="cpg-card-info">
             <div class="cpg-card-number" title="<?php _e('برای کپی کلیک کنید', 'shetab-card-to-card-payment-gateway'); ?>">
-                <?php echo chunk_split($card_number, 4, '-'); ?>
+                <?php echo chunk_split($card_number, 4, ' '); ?>
             </div>
             <div class="cpg-card-holder"><?php echo esc_html($card_holder); ?></div>
         </div>
