@@ -53,6 +53,14 @@ class PaymentGateway extends \WC_Payment_Gateway {
     
     public function process_payment($order_id) {
         $order = wc_get_order($order_id);
+        
+        if (!$order) {
+            return array(
+                'result' => 'failure',
+                'messages' => __('سفارش یافت نشد', 'shetab-card-to-card-payment-gateway')
+            );
+        }
+        
         $transaction = new Transactions();
         
         try {
@@ -60,7 +68,7 @@ class PaymentGateway extends \WC_Payment_Gateway {
             $expires_at = date('Y-m-d H:i:s', strtotime('+10 minutes'));
             
             $transaction_id = $transaction->create(array(
-                'order_id' => $order_id,
+                'order_id' => $order->get_id(),
                 'amount' => $order->get_total(),
                 'expires_at' => $expires_at
             ));
@@ -73,14 +81,14 @@ class PaymentGateway extends \WC_Payment_Gateway {
             WC()->cart->empty_cart();
             
             return array(
-                'result'   => 'success',
+                'result' => 'success',
                 'redirect' => $order->get_checkout_payment_url(true)
             );
             
         } catch (\Exception $e) {
             wc_add_notice($e->getMessage(), 'error');
             return array(
-                'result'   => 'failure',
+                'result' => 'failure',
                 'messages' => $e->getMessage()
             );
         }
