@@ -12,8 +12,8 @@ class Database {
         $sql = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}cpg_transactions (
             id bigint(20) NOT NULL AUTO_INCREMENT,
             order_id bigint(20) NOT NULL,
-            amount bigint(20) NOT NULL,
-            unique_amount bigint(20) NOT NULL,
+            amount decimal(12,3) NOT NULL,
+            unique_amount decimal(12,3) NOT NULL,
             status varchar(20) NOT NULL,
             card_holder varchar(100) NULL,
             description text NULL,
