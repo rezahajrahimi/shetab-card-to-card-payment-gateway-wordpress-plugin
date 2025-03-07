@@ -1,0 +1,124 @@
+.cpg-payment-info {
+    background: #f8f8f8;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    display: flex;
+    align-items: flex-start;
+}
+
+.cpg-timer-container {
+    margin-left: 20px;
+}
+
+.cpg-timer {
+    position: relative;
+    width: 100px;
+    height: 100px;
+}
+
+.cpg-timer-circle {
+    width: 100px;
+    height: 100px;
+    transform: rotate(-90deg);
+}
+
+.cpg-timer-path-elapsed {
+    stroke: #f0f0f0;
+    stroke-width: 7px;
+    fill: none;
+}
+
+.cpg-timer-path-remaining {
+    stroke: #ff6b6b;
+    stroke-width: 7px;
+    stroke-linecap: round;
+    fill: none;
+    transform-origin: center;
+    transition: stroke-dashoffset 0.3s;
+}
+
+.cpg-timer-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #333;
+}
+
+.cpg-payment-details {
+    flex: 1;
+}
+
+.cpg-card-info {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    margin: 10px 0;
+}
+
+.cpg-card-number {
+    font-size: 1.4em;
+    font-weight: bold;
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+}
+
+.cpg-card-holder {
+    color: #666;
+}
+
+.cpg-amount-warning {
+    color: #e74c3c;
+    margin: 10px 0;
+}
+
+.cpg-expires-text {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.cpg-social-media {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+}
+
+.cpg-support-text {
+    margin-bottom: 15px;
+    color: #666;
+}
+
+.cpg-social-button {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 20px;
+    margin: 5px;
+    border-radius: 5px;
+    text-decoration: none;
+    color: #fff;
+    transition: opacity 0.3s;
+}
+
+.cpg-social-button:hover {
+    opacity: 0.9;
+    color: #fff;
+}
+
+.cpg-social-button img {
+    width: 24px;
+    height: 24px;
+    margin-left: 10px;
+}
+
+.cpg-telegram {
+    background-color: #0088cc;
+}
+
+.cpg-whatsapp {
+    background-color: #25D366;
+} 
