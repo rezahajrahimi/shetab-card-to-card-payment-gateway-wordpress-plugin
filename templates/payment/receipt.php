@@ -24,13 +24,10 @@ $card_holder = get_option('cpg_card_holder');
 $telegram_id = get_option('cpg_telegram_id');
 $whatsapp_number = get_option('cpg_whatsapp_number');
 
-// محاسبه زمان باقی‌مانده به ثانیه
+// محاسبه زمان باقی‌مانده
 $expires_time = strtotime($transaction->expires_at);
 $current_time = time();
 $remaining_time = $expires_time - $current_time;
-
-// کل زمان به ثانیه (10 دقیقه)
-$total_time = 10 * 60;
 
 // حذف هوک‌های اضافی که ممکن است باعث تکرار شوند
 remove_all_actions('woocommerce_receipt_' . $order->get_payment_method());
@@ -50,15 +47,12 @@ wp_enqueue_script('cpg-payment-script');
 
 <div class="cpg-payment-info" id="cpg-payment-container">
     <div class="cpg-timer-container">
-        <div class="cpg-timer" 
-             data-expires="<?php echo esc_attr($transaction->expires_at); ?>"
-             data-total-time="<?php echo esc_attr($total_time); ?>"
-             data-remaining-time="<?php echo esc_attr($remaining_time); ?>">
+        <div class="cpg-timer" data-expires="<?php echo esc_attr(date('c', $expires_time)); ?>">
             <svg class="cpg-timer-circle" viewBox="0 0 100 100">
                 <circle class="cpg-timer-path-elapsed" cx="50" cy="50" r="45" stroke="#f0f0f0" stroke-width="7" fill="none"/>
-                <circle class="cpg-timer-path-remaining" cx="50" cy="50" r="45" stroke="#4CAF50" stroke-width="7" fill="none"/>
+                <circle class="cpg-timer-path-remaining" cx="50" cy="50" r="45" stroke="#4CAF50" stroke-width="7" fill="none" transform="rotate(-90 50 50)"/>
             </svg>
-            <div class="cpg-timer-label"></div>
+            <div class="cpg-timer-label">10:00</div>
         </div>
         <p class="cpg-expires-text">
             <?php echo sprintf(

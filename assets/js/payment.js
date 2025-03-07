@@ -1,27 +1,18 @@
 (function($) {
-    'use strict';
-    
-    class PaymentTimer {
-        constructor(element) {
-            this.element = element;
-            this.expiresAt = new Date(element.dataset.expires).getTime();
-            this.totalTime = parseInt(element.dataset.totalTime, 10); // 10 دقیقه به ثانیه
-            this.remainingTime = parseInt(element.dataset.remainingTime, 10);
             this.labelElement = element.querySelector('.cpg-timer-label');
             this.pathElement = element.querySelector('.cpg-timer-path-remaining');
             
-            this.FULL_DASH_ARRAY = 283; // 2 * π * 45
+            this.FULL_DASH_ARRAY = 283;
             this.WARNING_THRESHOLD = 180; // 3 دقیقه
             this.ALERT_THRESHOLD = 60; // 1 دقیقه
+            this.TOTAL_TIME = 600; // 10 دقیقه در ثانیه
             
-            // تنظیم stroke-dasharray اولیه
             this.pathElement.style.strokeDasharray = `${this.FULL_DASH_ARRAY} ${this.FULL_DASH_ARRAY}`;
             
             this.init();
         }
         
         init() {
-            // اطمینان از اینکه فقط یک تایمر فعال است
             if (this.element.dataset.initialized === 'true') {
                 return;
             }
@@ -32,33 +23,33 @@
         }
         
         updateTimer() {
-            if (this.remainingTime <= 0) {
+            const now = new Date();
+            const timeLeft = Math.round((this.expiresAt - now) / 1000);
+            
+            if (timeLeft <= 0) {
                 clearInterval(this.timer);
                 this.labelElement.textContent = '00:00';
                 this.pathElement.style.strokeDashoffset = this.FULL_DASH_ARRAY;
                 this.element.closest('.cpg-payment-info').classList.add('expired');
-                location.reload();
                 return;
             }
             
             // محاسبه دقیقه و ثانیه
-            const minutes = Math.floor(this.remainingTime / 60);
-            const seconds = this.remainingTime % 60;
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
             this.labelElement.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
             
             // محاسبه stroke-dashoffset
-            const fraction = this.remainingTime / this.totalTime;
-            const dashoffset = this.FULL_DASH_ARRAY * (1 - fraction);
+            const fraction = 1 - (timeLeft / this.TOTAL_TIME);
+            const dashoffset = this.FULL_DASH_ARRAY * fraction;
             this.pathElement.style.strokeDashoffset = dashoffset;
             
             // تغییر رنگ بر اساس زمان باقی‌مانده
-            if (this.remainingTime <= this.ALERT_THRESHOLD) {
+            if (timeLeft <= this.ALERT_THRESHOLD) {
                 this.pathElement.style.stroke = '#f44336';
-            } else if (this.remainingTime <= this.WARNING_THRESHOLD) {
+            } else if (timeLeft <= this.WARNING_THRESHOLD) {
                 this.pathElement.style.stroke = '#ff9800';
             }
-            
-            this.remainingTime--;
         }
     }
     
