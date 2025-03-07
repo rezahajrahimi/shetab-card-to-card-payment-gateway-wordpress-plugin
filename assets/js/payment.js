@@ -8,22 +8,17 @@
             this.labelElement = element.querySelector('.cpg-timer-label');
             this.pathElement = element.querySelector('.cpg-timer-path-remaining');
             
-            this.FULL_DASH_ARRAY = 283;
+            this.FULL_DASH_ARRAY = 283; // 2 * π * 45
             this.WARNING_THRESHOLD = 300;
             this.ALERT_THRESHOLD = 60;
             
-            // محاسبه زمان کل بر اساس زمان باقی‌مانده
-            const timeLeft = Math.round((this.expiresAt - new Date().getTime()) / 1000);
-            this.TOTAL_TIME = timeLeft;
+            // تنظیم stroke-dasharray اولیه
+            this.pathElement.style.strokeDasharray = `${this.FULL_DASH_ARRAY} ${this.FULL_DASH_ARRAY}`;
             
             this.init();
         }
         
         init() {
-            // تنظیم stroke-dasharray اولیه
-            this.pathElement.style.strokeDasharray = `${this.FULL_DASH_ARRAY} ${this.FULL_DASH_ARRAY}`;
-            this.pathElement.style.strokeDashoffset = '0';
-            
             this.updateTimer();
             this.timer = setInterval(() => this.updateTimer(), 1000);
         }
@@ -37,42 +32,34 @@
                 this.labelElement.textContent = '00:00';
                 this.pathElement.style.strokeDashoffset = this.FULL_DASH_ARRAY;
                 this.element.closest('.cpg-payment-info').classList.add('expired');
+                location.reload(); // رفرش صفحه برای نمایش پیام انقضا
                 return;
             }
             
-            this.labelElement.textContent = this.formatTime(timeLeft);
-            this.setCircleDasharray(timeLeft);
-            this.setRemainingPathColor(timeLeft);
-        }
-        
-        formatTime(seconds) {
-            const minutes = Math.floor(seconds / 60);
-            const remainingSeconds = seconds % 60;
-            return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-        }
-        
-        setCircleDasharray(timeLeft) {
-            const fraction = timeLeft / this.TOTAL_TIME;
-            const dashoffset = (1 - fraction) * this.FULL_DASH_ARRAY;
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            this.labelElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            // محاسبه stroke-dashoffset
+            const timeLeftFraction = timeLeft / (24 * 60 * 60); // 24 ساعت به ثانیه
+            const dashoffset = this.FULL_DASH_ARRAY * (1 - timeLeftFraction);
             this.pathElement.style.strokeDashoffset = dashoffset;
-        }
-        
-        setRemainingPathColor(timeLeft) {
-            this.pathElement.classList.remove('warning', 'alert');
+            
+            // تغییر رنگ بر اساس زمان باقی‌مانده
             if (timeLeft <= this.ALERT_THRESHOLD) {
-                this.pathElement.classList.add('alert');
+                this.pathElement.style.stroke = '#f44336';
             } else if (timeLeft <= this.WARNING_THRESHOLD) {
-                this.pathElement.classList.add('warning');
+                this.pathElement.style.stroke = '#ff9800';
             }
         }
     }
     
-    // Initialize timers
-    document.querySelectorAll('.cpg-timer').forEach(timer => {
-        new PaymentTimer(timer);
+    // راه‌اندازی تایمر
+    $('.cpg-timer').each(function() {
+        new PaymentTimer(this);
     });
     
-    // Copy card number functionality
+    // کپی شماره کارت
     $('.cpg-card-number').on('click', function() {
         const el = document.createElement('textarea');
         el.value = $(this).text().replace(/\s/g, '');

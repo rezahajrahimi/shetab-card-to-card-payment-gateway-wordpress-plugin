@@ -1,4 +1,9 @@
+#cpg-payment-container {
+    display: block !important;
+}
+
 .cpg-payment-info {
+    display: flex !important;
     --primary-color: #4CAF50;
     --danger-color: #f44336;
     --warning-color: #ff9800;
@@ -11,7 +16,6 @@
     border-radius: 8px;
     padding: 20px;
     margin: 20px 0;
-    display: flex;
     align-items: flex-start;
     gap: 20px;
     direction: rtl;
@@ -36,19 +40,20 @@
 }
 
 .cpg-timer-circle {
-    fill: none;
-    stroke-width: 7;
+    transform: rotate(-90deg);
+    transform-origin: center;
 }
 
 .cpg-timer-path-elapsed {
-    stroke: #f0f0f0;
+    stroke-width: 7px;
 }
 
 .cpg-timer-path-remaining {
-    stroke: var(--primary-color);
+    stroke-width: 7px;
     stroke-linecap: round;
     transform-origin: center;
     transition: stroke-dashoffset 0.3s ease-in-out;
+    fill: none;
 }
 
 .cpg-timer-path-remaining.warning {

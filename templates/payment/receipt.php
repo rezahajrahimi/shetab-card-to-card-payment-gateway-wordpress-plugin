@@ -1,12 +1,7 @@
 <?php defined('ABSPATH') || exit; ?>
 
 <?php
-$order = wc_get_order($order_id);
-$card_number = get_option('cpg_card_number');
-$card_holder = get_option('cpg_card_holder');
-$telegram_id = get_option('cpg_telegram_id');
-$whatsapp_number = get_option('cpg_whatsapp_number');
-
+// بررسی وضعیت تراکنش
 global $wpdb;
 $transaction = $wpdb->get_row($wpdb->prepare(
     "SELECT * FROM {$wpdb->prefix}cpg_transactions WHERE order_id = %d ORDER BY id DESC LIMIT 1",
@@ -16,6 +11,18 @@ $transaction = $wpdb->get_row($wpdb->prepare(
 if (!$transaction) {
     return;
 }
+
+// اگر تراکنش تایید شده است، ریدایرکت به صفحه تشکر
+if ($transaction->status === 'completed') {
+    wp_redirect($order->get_checkout_order_received_url());
+    exit;
+}
+
+$order = wc_get_order($order_id);
+$card_number = get_option('cpg_card_number');
+$card_holder = get_option('cpg_card_holder');
+$telegram_id = get_option('cpg_telegram_id');
+$whatsapp_number = get_option('cpg_whatsapp_number');
 
 // محاسبه زمان باقی‌مانده
 $expires_time = strtotime($transaction->expires_at);
@@ -33,12 +40,12 @@ wp_enqueue_style('cpg-payment-style');
 wp_enqueue_script('cpg-payment-script');
 ?>
 
-<div class="cpg-payment-info">
+<div class="cpg-payment-info" id="cpg-payment-container">
     <div class="cpg-timer-container">
         <div class="cpg-timer" data-expires="<?php echo esc_attr($transaction->expires_at); ?>">
             <svg class="cpg-timer-circle" viewBox="0 0 100 100">
-                <circle class="cpg-timer-path-elapsed" cx="50" cy="50" r="45"/>
-                <circle class="cpg-timer-path-remaining" cx="50" cy="50" r="45"/>
+                <circle class="cpg-timer-path-elapsed" cx="50" cy="50" r="45" stroke="#f0f0f0" stroke-width="7" fill="none"/>
+                <circle class="cpg-timer-path-remaining" cx="50" cy="50" r="45" stroke="#4CAF50" stroke-width="7" fill="none"/>
             </svg>
             <div class="cpg-timer-label"></div>
         </div>
@@ -95,4 +102,29 @@ wp_enqueue_script('cpg-payment-script');
             </div>
         <?php endif; ?>
     </div>
-</div> 
+</div>
+
+<script>
+// اضافه کردن کد بررسی وضعیت تراکنش
+jQuery(document).ready(function($) {
+    function checkTransactionStatus() {
+        $.ajax({
+            url: '<?php echo admin_url('admin-ajax.php'); ?>',
+            type: 'POST',
+            data: {
+                action: 'check_transaction_status',
+                order_id: <?php echo $order_id; ?>,
+                nonce: '<?php echo wp_create_nonce('check_transaction_status'); ?>'
+            },
+            success: function(response) {
+                if (response.success && response.data.status === 'completed') {
+                    window.location.href = '<?php echo $order->get_checkout_order_received_url(); ?>';
+                }
+            }
+        });
+    }
+    
+    // بررسی هر 10 ثانیه
+    setInterval(checkTransactionStatus, 10000);
+});
+</script> 

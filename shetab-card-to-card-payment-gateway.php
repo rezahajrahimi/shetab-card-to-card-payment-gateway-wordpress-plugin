@@ -77,4 +77,24 @@ register_activation_hook(__FILE__, function() {
 // غیرفعال‌سازی پلاگین
 register_deactivation_hook(__FILE__, function() {
     // در صورت نیاز اقدامات لازم انجام شود
-}); 
+});
+
+// تابع بررسی وضعیت تراکنش با AJAX
+add_action('wp_ajax_check_transaction_status', 'cpg_check_transaction_status');
+add_action('wp_ajax_nopriv_check_transaction_status', 'cpg_check_transaction_status');
+
+function cpg_check_transaction_status() {
+    check_ajax_referer('check_transaction_status', 'nonce');
+    
+    $order_id = intval($_POST['order_id']);
+    
+    global $wpdb;
+    $transaction = $wpdb->get_row($wpdb->prepare(
+        "SELECT status FROM {$wpdb->prefix}cpg_transactions WHERE order_id = %d ORDER BY id DESC LIMIT 1",
+        $order_id
+    ));
+    
+    wp_send_json_success(array(
+        'status' => $transaction ? $transaction->status : 'pending'
+    ));
+} 
