@@ -25,6 +25,13 @@ class Core {
     }
     
     private function load_dependencies() {
+        // اطمینان از لود شدن فایل‌ها به ترتیب صحیح
+        require_once CPG_PLUGIN_DIR . 'includes/class-database.php';
+        require_once CPG_PLUGIN_DIR . 'includes/class-transactions.php';
+        require_once CPG_PLUGIN_DIR . 'includes/class-payment-gateway.php';
+        require_once CPG_PLUGIN_DIR . 'includes/class-admin.php';
+        require_once CPG_PLUGIN_DIR . 'includes/class-api.php';
+        
         new Admin();
         new API();
         new PaymentGateway();
