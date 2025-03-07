@@ -83,6 +83,13 @@ class PaymentGateway extends \WC_Payment_Gateway {
     }
     
     public function receipt_page($order_id) {
+        // جلوگیری از اجرای چندباره
+        static $already_called = false;
+        if ($already_called) {
+            return;
+        }
+        $already_called = true;
+        
         // جلوگیری از لود چندباره فایل‌های CSS و JS
         if (!wp_style_is('cpg-payment-style', 'enqueued')) {
             wp_enqueue_style('cpg-payment-style', CPG_PLUGIN_URL . 'assets/css/payment.css', array(), CPG_VERSION);

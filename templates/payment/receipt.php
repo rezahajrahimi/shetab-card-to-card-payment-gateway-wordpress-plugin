@@ -28,6 +28,10 @@ $whatsapp_number = get_option('cpg_whatsapp_number');
 $expires_time = strtotime($transaction->expires_at);
 $remaining_time = $expires_time - time();
 
+// حذف هوک‌های اضافی که ممکن است باعث تکرار شوند
+remove_all_actions('woocommerce_receipt_' . $order->get_payment_method());
+remove_all_actions('woocommerce_thankyou_' . $order->get_payment_method());
+
 // اگر زمان تمام شده، پیام مناسب نمایش داده شود
 if ($remaining_time <= 0) {
     echo '<div class="cpg-payment-info expired">';
@@ -36,13 +40,18 @@ if ($remaining_time <= 0) {
     return;
 }
 
+// محاسبه دقیق زمان باقی‌مانده به دقیقه و ثانیه
+$total_seconds = $remaining_time;
+
 wp_enqueue_style('cpg-payment-style');
 wp_enqueue_script('cpg-payment-script');
 ?>
 
 <div class="cpg-payment-info" id="cpg-payment-container">
     <div class="cpg-timer-container">
-        <div class="cpg-timer" data-expires="<?php echo esc_attr($transaction->expires_at); ?>">
+        <div class="cpg-timer" 
+             data-expires="<?php echo esc_attr($transaction->expires_at); ?>"
+             data-total-seconds="<?php echo esc_attr($total_seconds); ?>">
             <svg class="cpg-timer-circle" viewBox="0 0 100 100">
                 <circle class="cpg-timer-path-elapsed" cx="50" cy="50" r="45" stroke="#f0f0f0" stroke-width="7" fill="none"/>
                 <circle class="cpg-timer-path-remaining" cx="50" cy="50" r="45" stroke="#4CAF50" stroke-width="7" fill="none"/>

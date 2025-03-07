@@ -5,12 +5,13 @@
         constructor(element) {
             this.element = element;
             this.expiresAt = new Date(element.dataset.expires).getTime();
+            this.totalSeconds = parseInt(element.dataset.totalSeconds, 10);
             this.labelElement = element.querySelector('.cpg-timer-label');
             this.pathElement = element.querySelector('.cpg-timer-path-remaining');
             
             this.FULL_DASH_ARRAY = 283; // 2 * π * 45
-            this.WARNING_THRESHOLD = 300;
-            this.ALERT_THRESHOLD = 60;
+            this.WARNING_THRESHOLD = 300; // 5 دقیقه
+            this.ALERT_THRESHOLD = 60; // 1 دقیقه
             
             // تنظیم stroke-dasharray اولیه
             this.pathElement.style.strokeDasharray = `${this.FULL_DASH_ARRAY} ${this.FULL_DASH_ARRAY}`;
@@ -19,6 +20,12 @@
         }
         
         init() {
+            // اطمینان از اینکه فقط یک تایمر فعال است
+            if (this.element.dataset.initialized === 'true') {
+                return;
+            }
+            this.element.dataset.initialized = 'true';
+            
             this.updateTimer();
             this.timer = setInterval(() => this.updateTimer(), 1000);
         }
@@ -32,17 +39,18 @@
                 this.labelElement.textContent = '00:00';
                 this.pathElement.style.strokeDashoffset = this.FULL_DASH_ARRAY;
                 this.element.closest('.cpg-payment-info').classList.add('expired');
-                location.reload(); // رفرش صفحه برای نمایش پیام انقضا
+                location.reload();
                 return;
             }
             
+            // محاسبه دقیق دقیقه و ثانیه
             const minutes = Math.floor(timeLeft / 60);
             const seconds = timeLeft % 60;
-            this.labelElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            this.labelElement.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
             
             // محاسبه stroke-dashoffset
-            const timeLeftFraction = timeLeft / (24 * 60 * 60); // 24 ساعت به ثانیه
-            const dashoffset = this.FULL_DASH_ARRAY * (1 - timeLeftFraction);
+            const fraction = timeLeft / this.totalSeconds;
+            const dashoffset = this.FULL_DASH_ARRAY * (1 - fraction);
             this.pathElement.style.strokeDashoffset = dashoffset;
             
             // تغییر رنگ بر اساس زمان باقی‌مانده
@@ -54,10 +62,18 @@
         }
     }
     
-    // راه‌اندازی تایمر
-    $('.cpg-timer').each(function() {
-        new PaymentTimer(this);
-    });
+    // حذف تایمرهای قبلی
+    if (window.paymentTimers) {
+        window.paymentTimers.forEach(timer => clearInterval(timer));
+    }
+    window.paymentTimers = [];
+    
+    // راه‌اندازی تایمر جدید
+    const timerElement = document.querySelector('.cpg-timer');
+    if (timerElement && !timerElement.dataset.initialized) {
+        const timer = new PaymentTimer(timerElement);
+        window.paymentTimers.push(timer);
+    }
     
     // کپی شماره کارت
     $('.cpg-card-number').on('click', function() {
