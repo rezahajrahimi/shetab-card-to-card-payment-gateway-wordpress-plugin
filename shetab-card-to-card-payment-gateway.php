@@ -342,107 +342,98 @@ add_action('init', function() {
     );
 });
 
-// اضافه کردن درگاه پرداخت به ووکامرس
-add_action('woocommerce_payment_gateways', 'cpg_add_gateway_class');
-function cpg_add_gateway_class($gateways) {
-    $gateways[] = 'WC_Shetab_Card_To_Card_Payment_Gateway';
-    return $gateways;
-}
-
-// تعریف کلاس درگاه پرداخت
+// بررسی وجود ووکامرس و کلاس‌های مورد نیاز
 add_action('plugins_loaded', function() {
-    // بررسی وجود ووکامرس
-    if (!class_exists('WooCommerce') || !class_exists('WC_Payment_Gateway')) {
+    if (!class_exists('WooCommerce')) {
+        add_action('admin_notices', function() {
+            echo '<div class="error"><p>برای استفاده از درگاه پرداخت شتاب کارت به کارت، نیاز به نصب و فعال‌سازی ووکامرس دارید.</p></div>';
+        });
         return;
     }
+
+    // ثبت درگاه پرداخت کلاسیک
+    add_filter('woocommerce_payment_gateways', 'cpg_add_gateway_class');
     
-class WC_Shetab_Card_To_Card_Payment_Gateway extends WC_Payment_Gateway {
-    public function __construct() {
+    class WC_Shetab_Card_To_Card_Payment_Gateway extends WC_Payment_Gateway {
+        public function __construct() {
             $this->id = 'shetab_card_to_card';
             $this->icon = plugin_dir_url(__FILE__) . 'logo.jpeg'; 
-        $this->has_fields = false;
+            $this->has_fields = false;
             $this->method_title = 'درگاه پرداخت کارت به کارت';
             $this->method_description = 'پرداخت از طریق کارت به کارت با تایید خودکار';
-        
-            // پشتیبانی از ویژگی‌های ووکامرس
-        $this->supports = array(
+            
+            $this->supports = array(
                 'products',
-                'refunds',
-                'pre-orders'
-        );
-        
-            // بارگذاری تنظیمات
-        $this->init_form_fields();
-        $this->init_settings();
-        
-            // تنظیم متغیرها
-        $this->title = $this->get_option('title');
-        $this->description = $this->get_option('description');
-            $this->enabled = $this->get_option('enabled');
-        
-            // Actions
-        add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
+                'refunds'
+            );
+            
+            $this->init_form_fields();
+            $this->init_settings();
+            
+            $this->title = $this->get_option('title', 'پرداخت کارت به کارت');
+            $this->description = $this->get_option('description', 'پرداخت از طریق کارت به کارت');
+            $this->enabled = $this->get_option('enabled', 'yes');
+            
+            add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
             add_action('woocommerce_receipt_' . $this->id, array($this, 'receipt_page'));
-            add_action('woocommerce_api_' . $this->id, array($this, 'verify_payment'));
-    }
-    
-    public function init_form_fields() {
-        $this->form_fields = array(
-            'enabled' => array(
-                'title'       => 'فعال/غیرفعال',
-                'type'        => 'checkbox',
+        }
+
+        public function init_form_fields() {
+            $this->form_fields = array(
+                'enabled' => array(
+                    'title'       => 'فعال/غیرفعال',
+                    'type'        => 'checkbox',
                     'label'       => 'فعال کردن درگاه پرداخت کارت به کارت',
                     'default'     => 'yes'
-            ),
-            'title' => array(
-                'title'       => 'عنوان',
-                'type'        => 'text',
-                'description' => 'عنوانی که کاربر در صفحه پرداخت می‌بیند',
+                ),
+                'title' => array(
+                    'title'       => 'عنوان',
+                    'type'        => 'text',
+                    'description' => 'عنوانی که کاربر در صفحه پرداخت می‌بیند',
                     'default'     => 'پرداخت کارت به کارت',
-                'desc_tip'    => true,
-            ),
-            'description' => array(
-                'title'       => 'توضیحات',
-                'type'        => 'textarea',
-                'description' => 'توضیحاتی که کاربر در صفحه پرداخت می‌بیند',
+                    'desc_tip'    => true,
+                ),
+                'description' => array(
+                    'title'       => 'توضیحات',
+                    'type'        => 'textarea',
+                    'description' => 'توضیحاتی که کاربر در صفحه پرداخت می‌بیند',
                     'default'     => 'پرداخت مبلغ سفارش از طریق کارت به کارت با تایید خودکار'
                 )
-        );
-    }
-    
-    public function process_payment($order_id) {
+            );
+        }
+
+        public function process_payment($order_id) {
             $order = wc_get_order($order_id);
             
             // ایجاد تراکنش در دیتابیس
-        global $wpdb;
+            global $wpdb;
             $unique_amount = $order->get_total() + rand(1, 999) / 1000;
-        
-        $wpdb->insert(
-            $wpdb->prefix . 'cpg_transactions',
-            array(
-                'order_id' => $order_id,
+            
+            $wpdb->insert(
+                $wpdb->prefix . 'cpg_transactions',
+                array(
+                    'order_id' => $order_id,
                     'amount' => $order->get_total(),
-                'unique_amount' => $unique_amount,
-                'status' => 'pending',
-                'created_at' => current_time('mysql'),
+                    'unique_amount' => $unique_amount,
+                    'status' => 'pending',
+                    'created_at' => current_time('mysql'),
                     'expires_at' => date('Y-m-d H:i:s', strtotime('+24 hours')),
-            ),
-            array('%d', '%f', '%f', '%s', '%s', '%s')
-        );
-        
+                ),
+                array('%d', '%f', '%f', '%s', '%s', '%s')
+            );
+            
             // تغییر وضعیت سفارش به در انتظار پرداخت
             $order->update_status('pending', __('در انتظار پرداخت کارت به کارت', 'woocommerce'));
             
             // خالی کردن سبد خرید
             WC()->cart->empty_cart();
             
-            // انتقال به صفحه پرداخت
             return array(
                 'result'   => 'success',
                 'redirect' => $order->get_checkout_payment_url(true)
             );
         }
-        
+
         public function receipt_page($order_id) {
             $order = wc_get_order($order_id);
             $card_number = get_option('cpg_card_number');
@@ -454,22 +445,25 @@ class WC_Shetab_Card_To_Card_Payment_Gateway extends WC_Payment_Gateway {
                 $order_id
             ));
             
-            echo '<div class="card-payment-info">';
-            echo '<h3>اطلاعات پرداخت کارت به کارت</h3>';
-            echo '<p>لطفاً مبلغ دقیق ' . wc_price($transaction->unique_amount) . ' را به شماره کارت زیر واریز نمایید:</p>';
-            echo '<div class="card-details">';
-            echo '<p><strong>شماره کارت:</strong> ' . chunk_split($card_number, 4, ' ') . '</p>';
-            echo '<p><strong>به نام:</strong> ' . esc_html($card_holder) . '</p>';
-            echo '</div>';
-            echo '<p class="warning">توجه: پرداخت دقیقاً با مبلغ اعلام شده انجام شود.</p>';
-            echo '</div>';
-        }
-        
-        public function can_refund_order($order) {
-            return $order && $order->get_transaction_id();
+            if ($transaction) {
+                echo '<div class="card-payment-info">';
+                echo '<h3>اطلاعات پرداخت کارت به کارت</h3>';
+                echo '<p>لطفاً مبلغ دقیق ' . wc_price($transaction->unique_amount) . ' را به شماره کارت زیر واریز نمایید:</p>';
+                echo '<div class="card-details">';
+                echo '<p><strong>شماره کارت:</strong> ' . chunk_split($card_number, 4, ' ') . '</p>';
+                echo '<p><strong>به نام:</strong> ' . esc_html($card_holder) . '</p>';
+                echo '</div>';
+                echo '<p class="warning">توجه: پرداخت دقیقاً با مبلغ اعلام شده انجام شود.</p>';
+                echo '</div>';
+            }
         }
     }
 });
+
+function cpg_add_gateway_class($gateways) {
+    $gateways[] = 'WC_Shetab_Card_To_Card_Payment_Gateway';
+    return $gateways;
+}
 
 // اضافه کردن استایل به صفحه پرداخت
 add_action('wp_enqueue_scripts', function() {
