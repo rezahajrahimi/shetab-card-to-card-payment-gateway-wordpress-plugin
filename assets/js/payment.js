@@ -1,56 +1,81 @@
-jQuery(document).ready(function($) {
-    function startTimer(expiresAt) {
-        const timerElement = $('.cpg-timer');
-        const labelElement = timerElement.find('.cpg-timer-label');
-        const pathElement = timerElement.find('.cpg-timer-path-remaining');
+(function($) {
+    'use strict';
+    
+    class PaymentTimer {
+        constructor(element) {
+            this.element = element;
+            this.expiresAt = new Date(element.dataset.expires).getTime();
+            this.labelElement = element.querySelector('.cpg-timer-label');
+            this.pathElement = element.querySelector('.cpg-timer-path-remaining');
+            
+            this.FULL_DASH_ARRAY = 283;
+            this.WARNING_THRESHOLD = 300;
+            this.ALERT_THRESHOLD = 60;
+            this.TOTAL_TIME = 600;
+            
+            this.init();
+        }
         
-        const FULL_DASH_ARRAY = 283; // 2 * π * 45
-        const WARNING_THRESHOLD = 300; // 5 minutes
-        const ALERT_THRESHOLD = 60; // 1 minute
+        init() {
+            this.timer = setInterval(() => this.updateTimer(), 1000);
+        }
         
-        const expiresTime = new Date(expiresAt).getTime();
-        const totalTime = 600; // 10 minutes in seconds
+        updateTimer() {
+            const now = new Date().getTime();
+            const timeLeft = Math.round((this.expiresAt - now) / 1000);
+            
+            if (timeLeft <= 0) {
+                clearInterval(this.timer);
+                this.labelElement.textContent = '00:00';
+                this.pathElement.style.strokeDasharray = `0 ${this.FULL_DASH_ARRAY}`;
+                this.element.closest('.cpg-payment-info').classList.add('expired');
+                return;
+            }
+            
+            this.labelElement.textContent = this.formatTime(timeLeft);
+            this.setCircleDasharray(timeLeft);
+            this.setRemainingPathColor(timeLeft);
+        }
         
-        function formatTime(seconds) {
+        formatTime(seconds) {
             const minutes = Math.floor(seconds / 60);
             const remainingSeconds = seconds % 60;
             return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
         }
         
-        function setCircleDasharray(timeLeft) {
-            const fraction = timeLeft / totalTime;
-            const dasharray = `${(fraction * FULL_DASH_ARRAY).toFixed(0)} ${FULL_DASH_ARRAY}`;
-            pathElement.attr('stroke-dasharray', dasharray);
+        setCircleDasharray(timeLeft) {
+            const fraction = timeLeft / this.TOTAL_TIME;
+            const dasharray = `${(fraction * this.FULL_DASH_ARRAY).toFixed(0)} ${this.FULL_DASH_ARRAY}`;
+            this.pathElement.style.strokeDasharray = dasharray;
         }
         
-        function setRemainingPathColor(timeLeft) {
-            if (timeLeft <= ALERT_THRESHOLD) {
-                pathElement.css('stroke', '#ff0000');
-            } else if (timeLeft <= WARNING_THRESHOLD) {
-                pathElement.css('stroke', '#ff9900');
+        setRemainingPathColor(timeLeft) {
+            this.pathElement.classList.remove('warning', 'alert');
+            if (timeLeft <= this.ALERT_THRESHOLD) {
+                this.pathElement.classList.add('alert');
+            } else if (timeLeft <= this.WARNING_THRESHOLD) {
+                this.pathElement.classList.add('warning');
             }
         }
-        
-        const timer = setInterval(() => {
-            const now = new Date().getTime();
-            const timeLeft = Math.round((expiresTime - now) / 1000);
-            
-            if (timeLeft <= 0) {
-                clearInterval(timer);
-                labelElement.text('00:00');
-                pathElement.css('stroke-dasharray', '0 283');
-                $('.cpg-payment-info').addClass('expired');
-                return;
-            }
-            
-            labelElement.text(formatTime(timeLeft));
-            setCircleDasharray(timeLeft);
-            setRemainingPathColor(timeLeft);
-        }, 1000);
     }
     
-    $('.cpg-timer').each(function() {
-        const expiresAt = $(this).data('expires');
-        startTimer(expiresAt);
+    // Initialize timers
+    document.querySelectorAll('.cpg-timer').forEach(timer => {
+        new PaymentTimer(timer);
     });
-}); 
+    
+    // Copy card number functionality
+    $('.cpg-card-number').on('click', function() {
+        const el = document.createElement('textarea');
+        el.value = $(this).text().replace(/\s/g, '');
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        
+        const originalText = $(this).text();
+        $(this).text('کپی شد!');
+        setTimeout(() => $(this).text(originalText), 1000);
+    });
+    
+})(jQuery); 

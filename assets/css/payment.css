@@ -1,15 +1,23 @@
 .cpg-payment-info {
-    background: #f8f8f8;
-    border: 1px solid #ddd;
+    --primary-color: #4CAF50;
+    --danger-color: #f44336;
+    --warning-color: #ff9800;
+    --border-color: #ddd;
+    --bg-color: #f8f8f8;
+    --text-color: #333;
+    
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 20px;
     margin: 20px 0;
     display: flex;
     align-items: flex-start;
+    gap: 20px;
 }
 
 .cpg-timer-container {
-    margin-left: 20px;
+    flex-shrink: 0;
 }
 
 .cpg-timer {
@@ -18,25 +26,32 @@
     height: 100px;
 }
 
-.cpg-timer-circle {
-    width: 100px;
-    height: 100px;
+.cpg-timer svg {
     transform: rotate(-90deg);
+}
+
+.cpg-timer-circle {
+    fill: none;
+    stroke-width: 7;
 }
 
 .cpg-timer-path-elapsed {
     stroke: #f0f0f0;
-    stroke-width: 7px;
-    fill: none;
 }
 
 .cpg-timer-path-remaining {
-    stroke: #ff6b6b;
-    stroke-width: 7px;
+    stroke: var(--primary-color);
     stroke-linecap: round;
-    fill: none;
     transform-origin: center;
-    transition: stroke-dashoffset 0.3s;
+    transition: stroke-dashoffset 0.3s ease-in-out;
+}
+
+.cpg-timer-path-remaining.warning {
+    stroke: var(--warning-color);
+}
+
+.cpg-timer-path-remaining.alert {
+    stroke: var(--danger-color);
 }
 
 .cpg-timer-label {
@@ -46,7 +61,7 @@
     transform: translate(-50%, -50%);
     font-size: 1.2em;
     font-weight: bold;
-    color: #333;
+    color: var(--text-color);
 }
 
 .cpg-payment-details {
@@ -55,17 +70,19 @@
 
 .cpg-card-info {
     background: #fff;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     padding: 15px;
     margin: 10px 0;
 }
 
 .cpg-card-number {
+    font-family: monospace;
     font-size: 1.4em;
     font-weight: bold;
     letter-spacing: 2px;
     margin-bottom: 5px;
+    user-select: all;
 }
 
 .cpg-card-holder {
@@ -73,8 +90,12 @@
 }
 
 .cpg-amount-warning {
-    color: #e74c3c;
+    color: var(--danger-color);
     margin: 10px 0;
+    padding: 10px;
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    background-color: rgba(244, 67, 54, 0.1);
 }
 
 .cpg-expires-text {
@@ -85,7 +106,7 @@
 .cpg-social-media {
     margin-top: 20px;
     padding-top: 20px;
-    border-top: 1px solid #ddd;
+    border-top: 1px solid var(--border-color);
 }
 
 .cpg-support-text {
@@ -101,12 +122,12 @@
     border-radius: 5px;
     text-decoration: none;
     color: #fff;
-    transition: opacity 0.3s;
+    transition: all 0.3s ease;
 }
 
 .cpg-social-button:hover {
     opacity: 0.9;
-    color: #fff;
+    transform: translateY(-1px);
 }
 
 .cpg-social-button img {
@@ -121,4 +142,15 @@
 
 .cpg-whatsapp {
     background-color: #25D366;
+}
+
+@media (max-width: 768px) {
+    .cpg-payment-info {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .cpg-payment-details {
+        width: 100%;
+    }
 } 
