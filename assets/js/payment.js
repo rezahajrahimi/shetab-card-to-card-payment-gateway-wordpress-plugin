@@ -11,12 +11,20 @@
             this.FULL_DASH_ARRAY = 283;
             this.WARNING_THRESHOLD = 300;
             this.ALERT_THRESHOLD = 60;
-            this.TOTAL_TIME = 600;
+            
+            // محاسبه زمان کل بر اساس زمان باقی‌مانده
+            const timeLeft = Math.round((this.expiresAt - new Date().getTime()) / 1000);
+            this.TOTAL_TIME = timeLeft;
             
             this.init();
         }
         
         init() {
+            // تنظیم stroke-dasharray اولیه
+            this.pathElement.style.strokeDasharray = `${this.FULL_DASH_ARRAY} ${this.FULL_DASH_ARRAY}`;
+            this.pathElement.style.strokeDashoffset = '0';
+            
+            this.updateTimer();
             this.timer = setInterval(() => this.updateTimer(), 1000);
         }
         
@@ -27,7 +35,7 @@
             if (timeLeft <= 0) {
                 clearInterval(this.timer);
                 this.labelElement.textContent = '00:00';
-                this.pathElement.style.strokeDasharray = `0 ${this.FULL_DASH_ARRAY}`;
+                this.pathElement.style.strokeDashoffset = this.FULL_DASH_ARRAY;
                 this.element.closest('.cpg-payment-info').classList.add('expired');
                 return;
             }
@@ -45,8 +53,8 @@
         
         setCircleDasharray(timeLeft) {
             const fraction = timeLeft / this.TOTAL_TIME;
-            const dasharray = `${(fraction * this.FULL_DASH_ARRAY).toFixed(0)} ${this.FULL_DASH_ARRAY}`;
-            this.pathElement.style.strokeDasharray = dasharray;
+            const dashoffset = (1 - fraction) * this.FULL_DASH_ARRAY;
+            this.pathElement.style.strokeDashoffset = dashoffset;
         }
         
         setRemainingPathColor(timeLeft) {

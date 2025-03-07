@@ -14,20 +14,25 @@
     display: flex;
     align-items: flex-start;
     gap: 20px;
+    direction: rtl;
 }
 
 .cpg-timer-container {
     flex-shrink: 0;
+    text-align: center;
 }
 
 .cpg-timer {
     position: relative;
     width: 100px;
     height: 100px;
+    margin: 0 auto;
 }
 
 .cpg-timer svg {
     transform: rotate(-90deg);
+    width: 100%;
+    height: 100%;
 }
 
 .cpg-timer-circle {
@@ -62,10 +67,26 @@
     font-size: 1.2em;
     font-weight: bold;
     color: var(--text-color);
+    font-family: monospace;
 }
 
 .cpg-payment-details {
     flex: 1;
+}
+
+.cpg-payment-details h3 {
+    margin-top: 0;
+    color: var(--text-color);
+    font-size: 1.4em;
+}
+
+.cpg-amount-text {
+    font-size: 1.1em;
+    margin: 15px 0;
+}
+
+.cpg-amount-text strong {
+    color: var(--primary-color);
 }
 
 .cpg-card-info {
@@ -78,29 +99,32 @@
 
 .cpg-card-number {
     font-family: monospace;
-    font-size: 1.4em;
+    font-size: 1.8em;
     font-weight: bold;
     letter-spacing: 2px;
     margin-bottom: 5px;
     user-select: all;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.cpg-card-number:hover {
+    background: #f5f5f5;
 }
 
 .cpg-card-holder {
     color: #666;
+    text-align: center;
 }
 
 .cpg-amount-warning {
     color: var(--danger-color);
-    margin: 10px 0;
+    margin: 15px 0;
     padding: 10px;
     border: 1px solid currentColor;
     border-radius: 4px;
     background-color: rgba(244, 67, 54, 0.1);
-}
-
-.cpg-expires-text {
-    color: #666;
-    font-size: 0.9em;
 }
 
 .cpg-social-media {
@@ -121,13 +145,14 @@
     margin: 5px;
     border-radius: 5px;
     text-decoration: none;
-    color: #fff;
+    color: #fff !important;
     transition: all 0.3s ease;
 }
 
 .cpg-social-button:hover {
     opacity: 0.9;
     transform: translateY(-1px);
+    color: #fff !important;
 }
 
 .cpg-social-button img {
@@ -144,6 +169,13 @@
     background-color: #25D366;
 }
 
+.cpg-expired-message {
+    color: var(--danger-color);
+    text-align: center;
+    font-size: 1.2em;
+    margin: 0;
+}
+
 @media (max-width: 768px) {
     .cpg-payment-info {
         flex-direction: column;
@@ -152,5 +184,9 @@
     
     .cpg-payment-details {
         width: 100%;
+    }
+    
+    .cpg-card-number {
+        font-size: 1.4em;
     }
 } 

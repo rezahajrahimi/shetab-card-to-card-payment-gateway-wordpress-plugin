@@ -17,15 +17,28 @@ if (!$transaction) {
     return;
 }
 
+// محاسبه زمان باقی‌مانده
 $expires_time = strtotime($transaction->expires_at);
+$remaining_time = $expires_time - time();
+
+// اگر زمان تمام شده، پیام مناسب نمایش داده شود
+if ($remaining_time <= 0) {
+    echo '<div class="cpg-payment-info expired">';
+    echo '<p class="cpg-expired-message">' . __('مهلت پرداخت به پایان رسیده است. لطفاً سفارش جدیدی ثبت کنید.', 'shetab-card-to-card-payment-gateway') . '</p>';
+    echo '</div>';
+    return;
+}
+
+wp_enqueue_style('cpg-payment-style');
+wp_enqueue_script('cpg-payment-script');
 ?>
 
 <div class="cpg-payment-info">
     <div class="cpg-timer-container">
         <div class="cpg-timer" data-expires="<?php echo esc_attr($transaction->expires_at); ?>">
-            <svg class="cpg-timer-circle" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <circle class="cpg-timer-path-elapsed" cx="50" cy="50" r="45" />
-                <circle class="cpg-timer-path-remaining" cx="50" cy="50" r="45" />
+            <svg class="cpg-timer-circle" viewBox="0 0 100 100">
+                <circle class="cpg-timer-path-elapsed" cx="50" cy="50" r="45"/>
+                <circle class="cpg-timer-path-remaining" cx="50" cy="50" r="45"/>
             </svg>
             <div class="cpg-timer-label"></div>
         </div>
@@ -40,10 +53,12 @@ $expires_time = strtotime($transaction->expires_at);
     <div class="cpg-payment-details">
         <h3><?php _e('اطلاعات پرداخت کارت به کارت', 'shetab-card-to-card-payment-gateway'); ?></h3>
         
-        <p><?php printf(
-            __('لطفاً مبلغ دقیق %s را به شماره کارت زیر واریز نمایید:', 'shetab-card-to-card-payment-gateway'),
-            wc_price($transaction->unique_amount)
-        ); ?></p>
+        <p class="cpg-amount-text">
+            <?php printf(
+                __('لطفاً مبلغ دقیق %s را به شماره کارت زیر واریز نمایید:', 'shetab-card-to-card-payment-gateway'),
+                '<strong>' . wc_price($transaction->unique_amount) . '</strong>'
+            ); ?>
+        </p>
         
         <div class="cpg-card-info">
             <div class="cpg-card-number" title="<?php _e('برای کپی کلیک کنید', 'shetab-card-to-card-payment-gateway'); ?>">
