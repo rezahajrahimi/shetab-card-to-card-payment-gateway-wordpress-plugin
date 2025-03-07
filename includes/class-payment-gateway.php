@@ -85,4 +85,45 @@ class PaymentGateway extends \WC_Payment_Gateway {
     public function receipt_page($order_id) {
         include CPG_PLUGIN_DIR . 'templates/payment/receipt.php';
     }
+
+    public function process_refund($order_id, $amount = null, $reason = '') {
+        $order = wc_get_order($order_id);
+        
+        if (!$order) {
+            return new \WP_Error('invalid_order', __('سفارش نامعتبر است', 'shetab-card-to-card-payment-gateway'));
+        }
+        
+        // ثبت استرداد در تراکنش‌ها
+        global $wpdb;
+        $transaction = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}cpg_transactions WHERE order_id = %d AND status = 'completed'",
+            $order_id
+        ));
+        
+        if (!$transaction) {
+            return new \WP_Error('invalid_transaction', __('تراکنش معتبری برای این سفارش یافت نشد', 'shetab-card-to-card-payment-gateway'));
+        }
+        
+        $wpdb->update(
+            $wpdb->prefix . 'cpg_transactions',
+            array(
+                'status' => 'refunded',
+                'description' => $reason,
+                'updated_at' => current_time('mysql')
+            ),
+            array('id' => $transaction->id),
+            array('%s', '%s', '%s'),
+            array('%d')
+        );
+        
+        // افزودن یادداشت به سفارش
+        $order->add_order_note(
+            sprintf(__('مبلغ %s استرداد شد. دلیل: %s', 'shetab-card-to-card-payment-gateway'),
+                wc_price($amount),
+                $reason
+            )
+        );
+        
+        return true;
+    }
 } 
