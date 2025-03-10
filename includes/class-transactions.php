@@ -41,7 +41,7 @@ class Transactions {
         global $wpdb;
         
         $transaction = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM {$this->table} WHERE id = %d AND status = 'pending'",
+            "SELECT * FROM {$this->table} WHERE id = %d AND unique_amount = %f AND status = 'pending'",
             $order_id,
             $amount
         ));
@@ -57,9 +57,12 @@ class Transactions {
         $this->update_status($transaction->id, 'completed');
         $this->add_log($transaction->id, __('پرداخت با موفقیت تایید شد', 'shetab-card-to-card-payment-gateway'));
         
-        $order = wc_get_order($order_id);
-        $order->payment_complete();
-        $order->add_order_note(__('پرداخت از طریق کارت به کارت تایید شد.', 'shetab-card-to-card-payment-gateway'));
+        $order = wc_get_order($transaction->order_id);
+        if ($order) {
+            $order->payment_complete();
+            $order->update_status('processing');
+            $order->add_order_note(__('پرداخت از طریق کارت به کارت تایید شد.', 'shetab-card-to-card-payment-gateway'));
+        }
         
         return true;
     }
