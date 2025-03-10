@@ -6,7 +6,7 @@ defined('ABSPATH') || exit;
 class PaymentGateway extends \WC_Payment_Gateway {
     public function __construct() {
         $this->id = 'shetab_card_to_card';
-        $this->icon = CPG_PLUGIN_URL . 'assets/images/logo.png';
+        $this->icon = CPG_PLUGIN_URL . 'assets/images/logo.jpeg';
         $this->has_fields = false;
         $this->method_title = __('درگاه پرداخت کارت به کارت', 'shetab-card-to-card-payment-gateway');
         $this->method_description = __('پرداخت از طریق کارت به کارت با تایید خودکار', 'shetab-card-to-card-payment-gateway');

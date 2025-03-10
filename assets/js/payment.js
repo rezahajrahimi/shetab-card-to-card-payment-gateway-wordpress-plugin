@@ -1,4 +1,8 @@
 (function($) {
+    class PaymentTimer {
+        constructor(element) {
+            this.element = element;
+            this.expiresAt = new Date(element.dataset.expires);
             this.labelElement = element.querySelector('.cpg-timer-label');
             this.pathElement = element.querySelector('.cpg-timer-path-remaining');
             
@@ -55,13 +59,13 @@
     
     // حذف تایمرهای قبلی
     if (window.paymentTimers) {
-        window.paymentTimers.forEach(timer => clearInterval(timer));
+        window.paymentTimers.forEach(timer => clearInterval(timer.timer));
     }
     window.paymentTimers = [];
     
     // راه‌اندازی تایمر جدید
     const timerElement = document.querySelector('.cpg-timer');
-    if (timerElement && !timerElement.dataset.initialized) {
+    if (timerElement) {
         const timer = new PaymentTimer(timerElement);
         window.paymentTimers.push(timer);
     }

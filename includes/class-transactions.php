@@ -41,7 +41,7 @@ class Transactions {
         global $wpdb;
         
         $transaction = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM {$this->table} WHERE order_id = %d AND unique_amount = %f AND status = 'pending' AND expires_at > NOW()",
+            "SELECT * FROM {$this->table} WHERE id = %d AND status = 'pending'",
             $order_id,
             $amount
         ));
